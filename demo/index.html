@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>zdkelt-swipeable-action demo</title>
+
+    <script src="../../webcomponentsjs/webcomponents-loader.js"></script>
+
+    <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
+    <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+    <link rel="import" href="../zdkelt-swipeable-action.html">
+    <link rel="import" href="../../iron-icons/iron-icons.html">
+    <link rel="import" href="../../iron-icon/iron-icon.html">
+
+    <custom-style>
+      <style is="custom-style" include="demo-pages-shared-styles">
+      </style>
+    </custom-style>
+  </head>
+  <body>
+    <div class="vertical-section-container centered">
+      <h3>Basic zdkelt-swipeable-action demo</h3>
+      <demo-snippet>
+        <template>
+          <style>
+            .green {
+              background: green;
+              color: white;
+            }
+            .red {
+              background: firebrick;
+              color: white;
+            }
+            .blue {
+              background: dodgerblue;
+              color: white;
+            }
+            .gold {
+              background: goldenrod;
+              color: white;
+            }
+            .card {
+              background: white;
+              color: black;
+              height: 100px;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              padding: 0 8px;
+              cursor:ew-resize;
+            }
+            zdkelt-swipeable-action {
+              border: 1px solid dimgray;
+            }
+            .action {
+              display: flex;
+              align-items: center;
+              font-variant: small-caps;
+              font-size: 24px;
+              padding: 0px 20px;
+              flex: 1;
+            }
+            .left {
+              justify-content: flex-end;
+            }
+          </style>
+          <zdkelt-swipeable-action actions='["right", "left"]'>
+            <div class='card'>test</div>
+            <div class="action green" slot='swipe-right' onclick="parentElement.cancel()">
+              <div onclick="done(event, 'done')"><iron-icon icon="check"></iron-icon>&nbsp;Done</div>
+            </div>
+            <div class="action left red" slot='swipe-left' onclick="parentElement.cancel()">
+              <div onclick="done(event, 'delete')">Delete&nbsp;<iron-icon icon="delete"></iron-icon></div>
+            </div>
+          </zdkelt-swipeable-action>
+          <zdkelt-swipeable-action actions='["right", "left"]' disabled>
+              <div class='card'>test disabled</div>
+              <div class="action green" slot='swipe-right' onclick="parentElement.cancel()">
+                <div onclick="done(event, 'done')"><iron-icon icon="check"></iron-icon>&nbsp;Done</div>
+              </div>
+              <div class="action left red" slot='swipe-left' onclick="parentElement.cancel()">
+                <div onclick="done(event, 'delete')">Delete&nbsp;<iron-icon icon="delete"></iron-icon></div>
+              </div>
+            </zdkelt-swipeable-action>
+          <zdkelt-swipeable-action actions='["left"]' width-ratio='8'>
+              <div class='card'>test</div>
+              <div class="action green" slot='swipe-right' onclick="parentElement.cancel()">
+                <div>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Consequatur fuga sint possimus, natus eligendi voluptatibus! Dolore vel libero doloribus, sapiente sit inventore molestiae voluptate amet facilis, excepturi fugiat porro itaque?
+                Reprehenderit ex provident omnis quisquam nisi consequatur sit itaque recusandae adipisci tenetur aut exercitationem consectetur quae autem impedit, sapiente vitae ipsam eius ipsum. Cupiditate quae hic optio esse quisquam harum!
+                Repellendus, a dolorem dolore necessitatibus fugit tempore natus doloremque dolorum. Debitis nisi at labore animi temporibus consequuntur corporis ut tempora libero repellendus nam ea dolor modi id, possimus officia optio?
+                Nam aliquam harum expedita! Perspiciatis mollitia eligendi, soluta aspernatur at ex quis itaque unde fugit eveniet exercitationem commodi totam neque architecto laudantium expedita sequi. Illum dolorem placeat distinctio veniam fugit.
+                Qui, quo eveniet dignissimos autem ex rerum eius? Repellat, blanditiis itaque! Perspiciatis quisquam neque id, tempore ipsam voluptas eveniet magni quo expedita, explicabo mollitia, accusamus officiis non dolores autem quibusdam.
+                Alias cum nobis eius natus magnam corporis rerum, atque corrupti distinctio? Possimus illo numquam, velit quidem vero temporibus dolorum recusandae pariatur eveniet aliquam, officiis eligendi consequatur quisquam laborum sint sequi.
+                Non pariatur, veniam architecto accusantium assumenda ea reiciendis quas excepturi, distinctio quis culpa a! Voluptas, sint provident voluptatibus minima quo obcaecati ratione nobis officia soluta quia et optio suscipit modi.
+                Harum dolor voluptatum, quasi rerum et laudantium minus corporis ducimus voluptate deleniti labore doloribus natus. Incidunt voluptatum debitis nulla inventore, ea praesentium et, repellat eaque explicabo, aliquid distinctio veritatis atque.
+                Dolor sunt sed quo unde consequuntur pariatur dolores possimus dolorem repellendus ducimus? Et quis beatae earum aspernatur libero placeat tempora soluta laboriosam facilis quam, eveniet quod dolore, recusandae numquam non.
+                Sunt quod repudiandae iure a, sed asperiores expedita impedit, facere ab voluptatum corporis eveniet necessitatibus? Facilis ipsa voluptatem impedit accusamus temporibus facere, sed nostrum neque aut labore iure. Officia, veniam!</div>
+              </div>
+            </zdkelt-swipeable-action>
+        </template>
+      </demo-snippet>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,275 @@
+<link rel="import" href="../polymer/polymer-element.html">
+
+<dom-module id="zdkelt-swipeable-action">
+  <template strip-whitespace>
+    <style>
+      :host {
+        position: relative;
+        display: block;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        -webkit-user-select: none;
+        user-select: none;
+        cursor: default;
+      }
+      .back {
+        position:absolute;
+        left:0;
+        right:0;
+        bottom:0;
+        top:0;
+        background: lightgray;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      .hidden {
+        display:none;
+      }
+      .active {
+        background: lightgray;
+      }
+    </style>
+
+    <div id="left" class="back left hidden">
+      <slot class='actions' name="swipe-left"></slot>
+    </div>
+    <div id="right" class="back right hidden">
+      <slot class='actions' name="swipe-right"></slot>
+    </div>
+    <div id="card" class="card">
+      <slot></slot>
+    </div>
+  </template>
+
+  <script>
+    /**
+     * `zdkelt-swipeable-action`
+     *
+     *
+     * @customElement
+     * @polymer
+     * @demo demo/index.html
+     */
+    class ZdkeltSwipeableAction extends Polymer.Element {
+      static get is() { return 'zdkelt-swipeable-action' }
+      static get properties() {
+        return {
+          actions: {
+            type: Array,
+            value: () => ([]),
+          },
+
+          /**
+          * If true, then the container will not allow swiping.
+          */
+          disabled: {
+            type: Boolean,
+            value: false,
+          },
+
+          /**
+           * The ratio of the width of the element that the translation animation
+           * should happen over. For example, if the `widthRatio` is 3, the
+           * animation will take place on a distance 3 times the width of the
+           * element being swiped.
+           */
+          widthRatio: {
+            type: Number,
+            value: 3,
+          },
+
+          /**
+           * The ratio of the total animation distance after which the opacity
+           * transformation begins. For example, if the `widthRatio` is 1 and
+           * the `opacityRate` is 0.5, then the element needs to travel half its
+           * width before its opacity starts decreasing.
+           */
+          opacityRate: {
+            type: Number,
+            value: 0.2,
+          },
+
+          /**
+           * The CSS transition applied while swiping.
+           */
+          transition: {
+            type: String,
+            value: '300ms cubic-bezier(0.4, 0.0, 0.2, 1)',
+          },
+
+          /**
+          * the dead width before the movement is take in account, useful
+          * for mobiles
+          */
+          deadWidth: {
+            type: Number,
+            value: 50,
+          },
+        }
+      }
+
+      constructor() {
+        super()
+        this._trackStart = this._trackStart.bind(this)
+        this._trackMove = this._trackMove.bind(this)
+        this._trackEnd = this._trackEnd.bind(this)
+        this._trackEnd = this._trackEnd.bind(this)
+        this._onTransitionEnd = this._onTransitionEnd.bind(this)
+      }
+
+      connectedCallback() {
+        super.connectedCallback()
+        this._addListeners()
+      }
+
+      disconnectedCallback() {
+        super.disconnectedCallback()
+        this._removeListeners()
+      }
+
+      _addListeners() {
+        const node = this.$.card
+        // Set up the animation.
+        node.style.transitionProperty = this._transitionProperty
+        node.style.transition = this.transition
+        node.addEventListener('touchstart', this._trackStart, false)
+        node.addEventListener('touchmove', this._trackMove, false)
+        node.addEventListener('touchend', this._trackEnd, false)
+        node.addEventListener('mousedown', this._trackStart, false)
+        node.addEventListener('mousemove', this._trackMove, false)
+        node.addEventListener('mouseup', this._trackEnd, false)
+        node.addEventListener('transitionend', this._onTransitionEnd, false)
+      }
+
+      _removeListeners() {
+        const node = this.$.card
+        node.removeEventListener('touchstart', this._trackStart, false)
+        node.removeEventListener('touchmove', this._trackMove, false)
+        node.removeEventListener('touchend', this._trackEnd, false)
+        node.removeEventListener('mousedown', this._trackStart, false)
+        node.removeEventListener('mousemove', this._trackMove, false)
+        node.removeEventListener('mouseup', this._trackEnd, false)
+        node.removeEventListener('transitionend', this._onTransitionEnd, false)
+      }
+
+      _onTransitionEnd(evt) {
+        if (this._swipeComplete && evt.propertyName === 'opacity') {
+          const event = new CustomEvent('iron-swipe', { detail: {
+            direction: this._direction > 0 ? 'done' : 'delete',
+            target: this,
+          }})
+          this.dispatchEvent(event)
+        }
+        if (!this._swipeComplete) {
+          if (!this.$.right.classList.contains('hidden')) {
+            this.$.right.classList.add('hidden')
+          }
+          if (!this.$.left.classList.contains('hidden')) {
+            this.$.left.classList.add('hidden')
+          }
+        }
+      }
+
+      _trackStart(evt) {
+        if (this.disabled) { return }
+        this._node = {
+          width: this.$.card.offsetWidth,
+          height: this.$.card.offsetHeight,
+        }
+        this._orig = {
+          X: evt.screenX || (evt.changedTouches && evt.changedTouches[0].screenX) || evt.clientX,
+          Y: evt.screenY || (evt.changedTouches && evt.changedTouches[0].screenY) || evt.clientY,
+        }
+        this._track = true
+        this.$.card.style.transition = 'none'
+      }
+
+      _trackMove(evt) {
+        if (this.disabled) { return }
+        if (!this._track) return
+        const dx = (evt.screenX || (evt.changedTouches && evt.changedTouches[0].screenX) || evt.clientX) - this._orig.X
+        if (!this._checkMove(dx)) return
+        if (dx > this.deadWidth || dx < -this.deadWidth) {
+          this._animate(dx)
+        }
+      }
+
+      _checkMove(dx) {
+        if (dx > 0 && this.actions.includes('left')) return true
+        if (dx < 0 && this.actions.includes('right')) return true
+        return false
+      }
+
+      _animate(x) {
+        const target = this.$.card
+
+        if (x > 0) {
+          this.$.right.classList.remove('hidden')
+          if (!this.$.left.classList.contains('hidden')) {
+            this.$.left.classList.add('hidden')
+          }
+        }
+        if (x < 0) {
+          this.$.left.classList.remove('hidden')
+          if (!this.$.right.classList.contains('hidden')) {
+            this.$.right.classList.add('hidden')
+          }
+        }
+        // This is the total distance the animation will take place over.
+        const totalDistance = this._node.width * this.widthRatio
+        // Opacity distance overflow. `this._nodeWidth * this.opacityRate` is the
+        // total distance the element needs to travel to become completely
+        // transparent, and `x` is how much the element has already travelled.
+        const opaqueDistance = Math.max(0, Math.abs(x) - this._node.width * this.opacityRate)
+        const opacity = Math.max(0, (totalDistance - opaqueDistance) / totalDistance)
+        target.style.opacity = opacity
+        let translate = `translate3d(${x}px, 0px, 0)`
+        target.style.transform = translate
+      }
+
+      _trackEnd(evt) {
+        if (this.disabled) { return }
+        this._track = false
+        const dx = (evt.screenX || (evt.changedTouches && evt.changedTouches[0].screenX) || evt.clientX) - this._orig.X
+        if (!this._checkMove(dx)) return
+        // The element is swiped away if it's moved at least one third of its total width.
+        this._swipeComplete = Math.abs(dx) > this._node.width / this.widthRatio
+        this._direction = dx > 0
+        this._swipeEnd()
+      }
+
+      _swipeEnd() {
+        let target = this.$.card
+        // Restore the original transition;
+        target.style.transition = this.transition
+        if (this._swipeComplete) {
+          // If the element is ready to be swiped away, then translate it to the full
+          // transparency distance.
+          var totalDistance = this._node.width * this.widthRatio
+          this._animate(this._direction ? totalDistance : -totalDistance, target)
+        } else {
+          this._animate(0, target)
+        }
+      }
+
+      /**
+       * restores the element to its original state
+       */
+      cancel() {
+        if (this._swipeComplete) {
+          this._swipeComplete = false
+          clearTimeout(this._undoTimer)
+          this._undoTimer = null
+          this._animate(0, this.$.card)
+          this.dispatchEvent(new CustomEvent('iron-swipe-canceled'))
+        }
+      }
+    }
+
+    window.customElements.define(ZdkeltSwipeableAction.is, ZdkeltSwipeableAction)
+  </script>
+</dom-module>

@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>zdkelt-swipeable-action test</title>
+
+    <script src="../../webcomponentsjs/webcomponents-loader.js"></script>
+    <script src="../../web-component-tester/browser.js"></script>
+    <script src="../../iron-test-helpers/mock-interactions.js"></script>
+    <link rel="import" href="../zdkelt-swipeable-action.html">
+
+    <style>
+      zdkelt-swipeable-action {
+        width: 300px;
+      }
+    .card {
+      height: 100px;
+      background: gainsboro;
+    }
+    .left {
+      background: deepskyblue;
+    }
+    .right {
+      background-color: springgreen;
+    }
+    </style>
+  </head>
+  <body>
+
+    <test-fixture id="BasicTestFixture">
+      <template>
+        <zdkelt-swipeable-action>
+          <div class='card'>Test</div>
+          <div class='card left' slot="swipe-left">Left</div>
+          <div class='card right' slot="swipe-right">Right</div>
+        </zdkelt-swipeable-action>
+      </template>
+    </test-fixture>
+
+    <test-fixture id="actions">
+      <template>
+        <zdkelt-swipeable-action actions='["left", "right"]'>
+          <div class='card'>Test</div>
+          <div class='card left' slot="swipe-left">Left</div>
+          <div class='card right' slot="swipe-right">Right</div>
+        </zdkelt-swipeable-action>
+      </template>
+    </test-fixture>
+
+    <script>
+      describe('zdkelt-swipeable-action', () => {
+        it('instantiating the element with default properties works', () => {
+          const element = fixture('BasicTestFixture')
+          assert.equal(element.actions.length, 0)
+          const shadowRoot = element.shadowRoot
+          assert.equal(shadowRoot.childElementCount, 4)
+          const visibleDivs = Array.from(shadowRoot.querySelectorAll('div'))
+            .filter(div => !div.classList.contains('hidden'))
+          assert.equal(visibleDivs.length, 1)
+          assert.equal(visibleDivs[0].id, 'card')
+        })
+
+        it('without actions, done nothing', (done) => {
+          // no actions
+          const element = fixture('BasicTestFixture')
+          var swipeEventHandler = sinon.spy()
+          element.addEventListener('iron-swipe', swipeEventHandler)
+          assert.equal(element.actions.length, 0)
+
+          const card = element.querySelector('.card')
+          MockInteractions.track(card, 110, 0)
+          setTimeout(() => {
+            expect(swipeEventHandler.callCount).to.be.equal(0)
+            done()
+          }, 500) // wait until the end of the animation if occurs
+        })
+
+        it('enable left action', (done) => {
+          // moving left
+          const element = fixture('BasicTestFixture')
+          element.actions = ['left']
+          assert.equal(element.actions.length, 1)
+
+          element.addEventListener('iron-swipe', () => {
+            done()
+          })
+
+          const card = element.querySelector('.card')
+          MockInteractions.track(card, 110, 0)
+        })
+
+        it('enable left action, can\'t move right', (done) => {
+          const element = fixture('BasicTestFixture')
+          var swipeEventHandler = sinon.spy()
+          element.addEventListener('iron-swipe', swipeEventHandler)
+          element.actions = ['left']
+          assert.equal(element.actions.length, 1)
+
+          const card = element.querySelector('.card')
+          MockInteractions.track(card, -110, 0)
+          setTimeout(() => {
+            expect(swipeEventHandler.callCount).to.be.equal(0)
+            done()
+          }, 500) // wait until the end of the animation if occurs
+        })
+
+        it('enable right action', (done) => {
+          const element = fixture('BasicTestFixture')
+          element.actions = ['right']
+          assert.equal(element.actions.length, 1)
+
+          element.addEventListener('iron-swipe', () => {
+            done()
+          })
+
+          const card = element.querySelector('.card')
+          MockInteractions.track(card, -110, 0)
+        })
+
+        describe('ratio', () => {
+          // moving more than the ratio
+          it('moving less than the ratio', done => {
+            const element = fixture('actions')
+            var swipeEventHandler = sinon.spy()
+            element.addEventListener('iron-swipe', swipeEventHandler)
+            assert.equal(element.actions.length, 2)
+
+            const card = element.querySelector('.card')
+            MockInteractions.track(card, 90, 0)
+            setTimeout(() => {
+              expect(swipeEventHandler.callCount).to.be.equal(0)
+              done()
+            }, 500) // wait until the end of the animation if occurs
+          })
+
+          it('moving more than the ratio', done => {
+            const element = fixture('actions')
+            element.addEventListener('iron-swipe', () => {
+              done()
+            })
+            assert.equal(element.actions.length, 2)
+
+            const card = element.querySelector('.card')
+            MockInteractions.track(card, 110, 0)
+          })
+        })
+
+        it('cancel', (done) => {
+          // cancel the action
+          const element = fixture('actions')
+          element.addEventListener('iron-swipe', () => {
+            const visibleDivs = Array.from(element.shadowRoot.querySelectorAll('div'))
+              .filter(div => !div.classList.contains('hidden'))
+            assert.equal(visibleDivs.length, 2)
+            assert.isTrue(visibleDivs.includes(element.$.right))
+            assert.isTrue(visibleDivs.includes(element.$.card))
+            element.cancel()
+          })
+          element.addEventListener('iron-swipe-canceled', () => {
+            setTimeout(() => {
+              const visibleDivs = Array.from(element.shadowRoot.querySelectorAll('div'))
+                .filter(div => !div.classList.contains('hidden'))
+              assert.equal(visibleDivs.length, 1)
+              assert.isFalse(visibleDivs.includes(element.$.right))
+              assert.isTrue(visibleDivs.includes(element.$.card))
+              done()
+            }, 500) // wait until the end of the animation
+          })
+          assert.equal(element.actions.length, 2)
+
+          const card = element.querySelector('.card')
+          MockInteractions.track(card, 110, 0)
+        })
+      })
+    </script>
+
+  </body>
+</html>
